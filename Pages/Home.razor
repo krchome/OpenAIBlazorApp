@@ -1,0 +1,42 @@
+﻿@page "/"
+@inject OpenAIBlazorApp.Services.OpenAIService OpenAIService
+
+<h3>Generate Text using OpenAI</h3>
+
+<div>
+    <label for="promptInput">Enter your prompt:</label>
+    <textarea id="promptInput" @bind="prompt" rows="4" cols="50"></textarea>
+</div>
+<br />
+
+<button @onclick="GenerateText" class="btn btn-primary">Generate</button>
+
+<div>
+    <h4>Response:</h4>
+    <p>@generatedText</p>
+</div>
+
+@code {
+    private string prompt = string.Empty;
+    private string generatedText = string.Empty;
+
+    private async Task GenerateText()
+    {
+        if (string.IsNullOrWhiteSpace(prompt))
+        {
+            generatedText = "Please enter a prompt.";
+            return;
+        }
+
+        generatedText = "Generating...";
+
+        try
+        {
+            generatedText = await OpenAIService.GenerateTextAsync(prompt);
+        }
+        catch
+        {
+            generatedText = "An error occurred while contacting the API.";
+        }
+    }
+}

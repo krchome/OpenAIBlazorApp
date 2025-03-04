@@ -1,0 +1,52 @@
+﻿@page "/image-generator"
+@inject OpenAIBlazorApp.Services.OpenAIService OpenAIService
+
+<h3>AI Image Generator</h3>
+
+<input @bind="userPrompt" placeholder="Enter a prompt..." />
+<button @onclick="GenerateImage" disabled="@isLoading">Generate Image</button>
+
+@if (isLoading)
+{
+    <p><strong>Creating the image...</strong></p>
+}
+
+@if (imageUrls != null && imageUrls.Any() && !isLoading)
+{
+    <div>
+        @foreach (var url in imageUrls)
+        {
+            <img src="@url" alt="Generated Image"  />
+        }
+    </div>
+}
+
+@code {
+    private string userPrompt = "";
+    private List<string> imageUrls = new List<string>();
+    private bool isLoading = false;
+
+    private async Task GenerateImage()
+    {
+        if (string.IsNullOrWhiteSpace(userPrompt))
+            return;
+
+        isLoading = true;  // Show "Creating the image..."
+        imageUrls.Clear(); // Clear any previously generated images
+        StateHasChanged(); // Force UI refresh
+
+        // Request image generation from OpenAI service
+        try
+        {
+            imageUrls = await OpenAIService.GenerateImageAsync(userPrompt);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        // Clear the prompt input after generating the image
+        userPrompt = "";
+
+        isLoading = false; // Hide loading text
+    }
+}

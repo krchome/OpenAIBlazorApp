@@ -1,0 +1,98 @@
+﻿@page "/speech-generator"
+@inject OpenAIBlazorApp.Services.OpenAIService OpenAIService
+@inject IJSRuntime JSRuntime
+
+<h3>Text-to-Speech with OpenAI</h3>
+
+<div class="tts-container">
+    <!-- Text Input Row -->
+    <div class="tts-row">
+        <label for="textInput">Enter Text:</label>
+        <textarea id="textInput" @bind="TextInput" rows="4" cols="50" placeholder="Type your text here..."></textarea>
+    </div>
+
+    <!-- Voice Selection Row -->
+    <div class="tts-row">
+        <label for="voiceSelection">Select a Voice:</label>
+        <select id="voiceSelection">
+            @foreach (var voice in AvailableVoices)
+            {
+                <option value="@voice">@voice</option>
+            }
+        </select>
+    </div>
+
+    <!-- Play Button Row -->
+    <div class="tts-row">
+        <button class="btn btn-primary mt-2" @onclick="PlaySpeech" disabled="@isLoading">🎙️ Play Speech</button>
+    </div>
+
+    <!-- Audio URL / Download Link -->
+    @if (!string.IsNullOrEmpty(AudioUrl))
+    {
+        <div class="tts-row mt-3">
+            <a href="@AudioUrl" download="output.mp3" class="btn btn-success">Download Speech</a>
+        </div>
+    }
+
+    <!-- Loading Spinner -->
+    @if (isLoading)
+    {
+        <div class="tts-row mt-2">
+            <div class="spinner-border text-primary" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private string TextInput { get; set; } = string.Empty;
+    private string SelectedVoice { get; set; } = "alloy"; // Default voice
+    private string AudioUrl { get; set; } = string.Empty;
+    private bool isLoading = false;
+
+    private readonly List<string> AvailableVoices = new() { "alloy", "echo", "fable", "onyx", "nova", "shimmer", "ash", "sage", "coral" };
+
+    // // Handle text input change
+    // private async Task OnTextChanged(ChangeEventArgs e)
+    // {
+    //     TextInput = e.Value?.ToString() ?? string.Empty;
+    //     // Optionally trigger speech generation on text change
+    //     await PlaySpeech();
+    // }
+
+    // // Handle voice selection change
+    // private async Task OnVoiceChanged(ChangeEventArgs e)
+    // {
+    //     SelectedVoice = e.Value?.ToString() ?? "alloy"; // Default voice
+    //     // Optionally trigger speech generation on voice change
+    //     await PlaySpeech();
+    // }
+
+    private async Task PlaySpeech()
+    {
+        if (string.IsNullOrWhiteSpace(TextInput))
+            return;
+
+        isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            // Fetch new speech URL
+            AudioUrl = await OpenAIService.ConvertTextToSpeechAsync(TextInput, SelectedVoice);
+
+            // Play the audio directly using JavaScript
+            await JSRuntime.InvokeVoidAsync("eval", $"new Audio('{AudioUrl}').play()");
+
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+
+        isLoading = false;
+        StateHasChanged();
+    }
+}
