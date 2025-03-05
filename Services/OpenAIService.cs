@@ -12,7 +12,7 @@ namespace OpenAIBlazorApp.Services
     public class OpenAIService
     {
         private readonly HttpClient _httpClient;
-        private readonly string _apiKey = "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"; // Add your OpenAI API key here
+        private readonly string _apiKey = ""; // Add your OpenAI API key here
 
         public OpenAIService(HttpClient httpClient)
         {
